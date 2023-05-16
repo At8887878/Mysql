@@ -4,7 +4,7 @@
 ## 适用场景：
 1. 需要快速、简单的开发和简化应用开发的
 
-## 使用步骤（以监听业务库表user为例）：
+## 使用步骤
 1. 在config/global.config.php 中配置mysql参数,开启日志
 2. 先引入require_once('config/db.php')配置文件
 3. $obj = new DB('表名') 定义表名
