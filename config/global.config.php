@@ -11,7 +11,7 @@
         'Mysql' => array(
             'host'      => '127.0.0.1',
             'user'      => 'root',
-            'password'  => 'QY123456',
+            'password'  => 'root',
             'database'  => 'test',
         ),
         'LOG_MODE' => true, // 日志是否开启
