@@ -146,8 +146,8 @@
      */
 
     
-    $data = model::getBySql('select * from student');
-    $data_1 = model::getBySql('select * from student where SNO = "1001"');
+    $data = $student->getBySql('select * from student');
+    $data_1 = $student->getBySql('select * from student where SNO = "1001"');
     echo "<pre>";
     var_dump($data, $data_1);
     

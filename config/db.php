@@ -26,7 +26,7 @@ class DB {
 
             // 记录错误消息
             $message = mb_convert_encoding("无法连接到数据库,错误信息: ", 'GBK', 'UTF-8'). $e->getMessage();
-            $this->addLog("\n".date("[Y-m-d H:i:s]").":\n". $message,'/sqlConError_' . date('Y-m-d') . '.txt');
+            addLog("\n".date("[Y-m-d H:i:s]").":\n". $message,'/sqlConError_' . date('Y-m-d') . '.txt');
             exit;
         }
         
@@ -210,6 +210,27 @@ class DB {
         return $this->conn->affected_rows;
     }
 
+    function getBySql($sql = '') {
+        
+        $pattern = '/^(\s)*(SELECT|INSERT|UPDATE|DELETE|REPLACE|ALTER|CREATE|DROP|TRUNCATE|LOAD\s+DATA|COPY\s+|GRANT|REVOKE|LOCK|UNLOCK)(\s)/i';
+        // 为空||不为sql语句
+        if (!$sql || !preg_match($pattern, $sql)) {
+            return null;
+        }
+        try {
+            $result = $this->conn->query($sql);
+        } catch (mysqli_sql_exception $e) {
+            $message = mb_convert_encoding("数据库操作失败,原因: ", 'GBK', 'UTF-8'). $this->conn->error;
+            addLog("\n".date("[Y-m-d H:i:s]").":\n". $message, '/sqlOpError_' . date('Y-m-d') . '.txt');
+            return null;
+        }
+        $data = array();
+        while ($row = $result->fetch_assoc()) {
+            $data[] = $row;
+        }
+        return $data;
+    }
+
     /**
      * 解析查询的数组条件
      */
@@ -226,51 +247,6 @@ class DB {
     }
 }
 
-class model {
-    private static $conn;
-
-    public static function init($config) {
-        $mysql_config = $config['Mysql'];
-
-        try {
-            mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-            self::$conn = new mysqli($mysql_config['host'], $mysql_config['user'], $mysql_config['password'], $mysql_config['database']);
-        } catch (mysqli_sql_exception $e) {
-
-            echo "数据库连接失败,请开启log查看报错信息!!!";
-
-            // 记录错误消息
-            $message = mb_convert_encoding("无法连接到数据库,错误信息: ", 'GBK', 'UTF-8'). $e->getMessage();
-            addLog("\n".date("[Y-m-d H:i:s]").":\n". $message, '/sqlConError_' . date('Y-m-d') . '.txt');
-            exit;
-        }
-
-    }
-
-    public static function getBySql($sql = '') {
-        
-        $pattern = '/^(\s)*(SELECT|INSERT|UPDATE|DELETE|REPLACE|ALTER|CREATE|DROP|TRUNCATE|LOAD\s+DATA|COPY\s+|GRANT|REVOKE|LOCK|UNLOCK)(\s)/i';
-        // 为空||不为sql语句
-        if (!$sql || !preg_match($pattern, $sql)) {
-            return null;
-        }
-        try {
-            $result = self::$conn->query($sql);
-        } catch (mysqli_sql_exception $e) {
-            $message = mb_convert_encoding("数据库操作失败,原因: ", 'GBK', 'UTF-8'). self::$conn->error;
-            addLog("\n".date("[Y-m-d H:i:s]").":\n". $message, '/sqlOpError_' . date('Y-m-d') . '.txt');
-            return null;
-        }
-        $data = array();
-        while ($row = $result->fetch_assoc()) {
-            $data[] = $row;
-        }
-        return $data;
-    }
-}
-
-model::init($config);
-
 /**
  * 日志模式
  */
@@ -281,6 +257,7 @@ function addLog($text, $path){
     if (!$config['LOG_MODE']) {
         return false;
     }
+
     // 是否存在文件夹
     $log_dir = $config['LOG_PATH'];
     !file_exists($log_dir) && mkdir($log_dir, 0777, true);
